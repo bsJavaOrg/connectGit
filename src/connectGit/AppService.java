@@ -3,7 +3,9 @@ package connectGit;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -39,20 +41,23 @@ public class AppService {
 //		gitService.apiTestPost();
 //		gitService.apiTestPut();
 		
-		JSONArray PRList = gitService.getPullRequestList();
-		if(PRList.length() < 1) {
-			System.out.println("풀리퀘스트 목록이 존재하지 않음");
-		} else {
-			for(int i = 0; i < PRList.length(); i++) {
-				JSONObject jsonObj = (JSONObject) PRList.get(i);
-				
-				System.out.println("===========================================");
-				System.out.println("repository : " + new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
-				System.out.println("title : " + jsonObj.optString("title"));
-				System.out.println("number : " + jsonObj.optString("number"));
-				System.out.println("===========================================");
-				gitService.apiTestPut(jsonObj.optString("number"));
-			}	
+		JSONArray repoList = gitService.getOrgRepository();
+		
+		ArrayList<HashMap<String, String>> arr = new ArrayList<>();
+
+		for(int i = 0; i < repoList.length(); i++) {
+			JSONObject repoObj = (JSONObject) repoList.get(i);
+			
+			arr.add(gitService.getPullRequestList(repoObj.optString("full_name")));
+//			gitService.apiTestPut(jsonObj.optString("number"));
+		}
+		
+		System.out.println("");
+		System.out.println("======================PullRequestList================================");
+		for(HashMap<String, String> pr : arr) {
+			System.out.println(pr.toString());
+//			System.out.println(pr.get("url"));
+			gitService.apiTestPut(pr.get("url"));
 		}
 
 		

@@ -161,7 +161,8 @@ public class GitService {
 //	        System.out.println("===========================================");
 	        
 	    }
-	public JSONArray getPullRequestList() throws Exception 
+	
+	public HashMap<String, String> getPullRequestList(String repoAddr) throws Exception 
 	{
 		
 		URL url = null;
@@ -174,7 +175,7 @@ public class GitService {
 		int connTimeout = 5000;
 		int readTimeout = 3000;
 			
-		String apiUrl = "https://api.github.com/repos/soobin10236/test_repo/pulls";	// 각자 상황에 맞는 IP & url 사용 		
+		String apiUrl = "https://api.github.com/repos/" + repoAddr + "/pulls";	// 각자 상황에 맞는 IP & url 사용 		
 		
 		try 
 		{
@@ -184,6 +185,7 @@ public class GitService {
 			urlConnection.setConnectTimeout(connTimeout);
 			urlConnection.setReadTimeout(readTimeout);
 			urlConnection.setRequestProperty("Accept", "application/json;");
+			urlConnection.setRequestProperty("Authorization", "token " + password);
 			
 			buffer = new StringBuilder();
 			if(urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) 
@@ -220,23 +222,47 @@ public class GitService {
 		}
 		
 		
-		System.out.println("결과 : " + buffer.toString());
-		System.out.println(gson.toJson(buffer.toString()));
+//		System.out.println("getPullRequestList결과 : " + buffer.toString());
+		String branch = "dev-tnqls7742";
+
 		JSONArray jsonArr = new JSONArray(buffer.toString());
 		
-		/*for(int i = 0; i < jsonArr.length(); i++) {
+		HashMap<String, String> map = new HashMap<String, String>();
+		
+		for(int i = 0; i < jsonArr.length(); i++) {
 			JSONObject jsonObj = (JSONObject) jsonArr.get(i);
 			
-			System.out.println("===========================================");
-			System.out.println("repository : " + new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
-			System.out.println("title : " + jsonObj.optString("title"));
-			System.out.println("===========================================");
-		}	*/
+			String branchTitle = new JSONObject(jsonObj.optString("head")).optString("ref");
+			
+			
+			System.out.println("");
+			if(branchTitle.equals(branch)) {
+				System.out.println("=================getPullRequestList==========================");
+				System.out.println("repository : " + new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
+				System.out.println("branch : " + new JSONObject(jsonObj.optString("head")).optString("ref"));
+				System.out.println("title : " + jsonObj.optString("title"));
+				System.out.println("url : " + jsonObj.optString("url"));
+				map.put("repository", new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
+				map.put("branch", new JSONObject(jsonObj.optString("head")).optString("ref"));
+				map.put("title", jsonObj.optString("title"));
+				map.put("url", jsonObj.optString("url"));
+				
+			} else {
+				continue;
+//				System.out.println("=================wrongList==========================");
+			}
+			
+//			System.out.println("===========================================");
+		}
 		
-		return jsonArr;
+//		for(Object pr : arr) {
+//			System.out.println(pr.toString());
+//		}
+		
+		return map;
 	}
 	
-	public void apiTestPut(String PRNumber) throws Exception 
+	public void apiTestPut(String prUrl) throws Exception 
 	{
 		
 		System.out.println(password);
@@ -251,7 +277,7 @@ public class GitService {
 	    int readTimeout = 3000;
 			
 //	    String apiUrl = "https://jsonplaceholder.typicode.com/todos/1";	// 각자 상황에 맞는 IP & url 사용 		
-	    String apiUrl = "https://api.github.com/repos/soobin10236/test_repo/pulls/" + PRNumber + "/merge";	// 각자 상황에 맞는 IP & url 사용 		
+	    String apiUrl = prUrl + "/merge";	// 각자 상황에 맞는 IP & url 사용 		
 			
 	    try 
 	    {
@@ -388,32 +414,75 @@ public class GitService {
 		System.out.println(buffer.toString());
 		
 	}
+
 	
-	public void post(String requestURL, String jsonMessage) {
-		try {			
-			HttpClient client = HttpClientBuilder.create().build(); // HttpClient 생성			
-			HttpPost httpPost = new HttpPost(requestURL); //POST 메소드 URL 새성 	
-
+	/////////////////////////////////////////////////
+	public JSONArray getOrgRepository() throws Exception 
+	{
+		
+		URL url = null;
+		String readLine = null;
+		StringBuilder buffer = null;
+		BufferedReader bufferedReader = null;
+		BufferedWriter bufferedWriter = null;
+		HttpURLConnection urlConnection = null;
+		
+		int connTimeout = 5000;
+		int readTimeout = 3000;
 			
+		String apiUrl = "https://api.github.com/orgs/bsJavaOrg/repos";	// 각자 상황에 맞는 IP & url 사용 		
+		
+		try 
+		{
+			url = new URL(apiUrl);
+			urlConnection = (HttpURLConnection)url.openConnection();
+			urlConnection.setRequestMethod("GET");
+			urlConnection.setConnectTimeout(connTimeout);
+			urlConnection.setReadTimeout(readTimeout);
+			urlConnection.setRequestProperty("Accept", "application/json;");
+			urlConnection.setRequestProperty("Authorization", "token " + password);
+			
+			buffer = new StringBuilder();
+			if(urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) 
+			{
+				bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(),"UTF-8"));
+				while((readLine = bufferedReader.readLine()) != null) 
+				{
+					buffer.append(readLine).append("\n");
+				}
+			}
+			else 
+			{
+				buffer.append("code : ");
+				buffer.append(urlConnection.getResponseCode()).append("\n");
+				buffer.append("message : ");
+				buffer.append(urlConnection.getResponseMessage()).append("\n");
+			}
+		}
+		catch(Exception ex) 
+		{
+			ex.printStackTrace();
+		}
+		finally 
+		{
+			try 
+			{
+				if (bufferedWriter != null) { bufferedWriter.close(); }
+				if (bufferedReader != null) { bufferedReader.close(); }
+			}
+			catch(Exception ex) 
+			{ 
+				ex.printStackTrace();
+			}
+		}
+		
+		
+		System.out.println("결과 : " + buffer.toString());
+		JSONArray jsonArr = new JSONArray(buffer.toString());
+		
+		System.out.println(jsonArr);
 
-//			postRequest.get
-//			postRequest.setHeader("Accept", "application/json");			
-//			postRequest.setHeader("Connection", "keep-alive");			
-//			postRequest.setHeader("Content-Type", "application/json");			
-//			postRequest.addHeader("x-api-key", RestTestCommon.API_KEY); //KEY 입력 			
-//			//postRequest.addHeader("Authorization", token); // token 이용시			
-//			postRequest.setEntity(new StringEntity(jsonMessage)); //json 메시지 입력 			
-//			HttpResponse response = client.execute(postRequest);			//Response 출력			
-//			if (response.getStatusLine().getStatusCode() == 200) {				
-//				ResponseHandler<String> handler = new BasicResponseHandler();				
-//				String body = handler.handleResponse(response);				
-//				System.out.println(body);			
-//			} else {				
-//				System.out.println("response is error : " + response.getStatusLine().getStatusCode());			
-//			}		
-		} catch (Exception e){			
-			System.err.println(e.toString());		
-		}	
+		return jsonArr;
 	}
 	
 	
