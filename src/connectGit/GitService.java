@@ -7,8 +7,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
-
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 
 import java.util.Properties;
@@ -67,8 +68,6 @@ public class GitService {
 	    String restType = "PUT";
 	    callRestApi(apiUrl, restType);
 	    
-//	    System.out.println(buffer.toString());
-	        
 	}
 	
 	private HashMap<String, String> getPullRequest(JSONArray jsonArr) {
@@ -87,6 +86,9 @@ public class GitService {
 					System.out.println("리포지토리 : " + new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
 					System.out.println("브랜치 : " + new JSONObject(jsonObj.optString("head")).optString("ref"));
 					System.out.println("메시지 : " + jsonObj.optString("title"));
+					String timezone = new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("pushed_at").toString();
+					String convertTime = convertTime(timezone);
+					System.out.println("pushed_at : " + convertTime);
 					map.put("repository", new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
 					map.put("branch", new JSONObject(jsonObj.optString("head")).optString("ref"));
 					map.put("title", jsonObj.optString("title"));
@@ -96,11 +98,6 @@ public class GitService {
 					continue;
 				}
 				
-			}
-			
-			if(!map.isEmpty()) {
-				System.out.println("");
-				System.out.println("머지를 원하시면 1을 입력하세요. 이외에는 종료됩니다.");
 			}
 			
 		} catch(Exception e) {
@@ -178,6 +175,21 @@ public class GitService {
 		urlConnection.setRequestProperty("Authorization", "token " + password);
 		
 		return urlConnection;
+	}
+	
+	private String convertTime(String timezone) throws ParseException {
+	
+		String orgTime = timezone;
+		System.out.println(timezone);
+		
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		
+		Date date = formatter.parse(orgTime);
+		
+		System.out.println(date);
+		
+		
+		return orgTime;
 	}
 
 	
