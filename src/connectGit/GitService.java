@@ -2,332 +2,191 @@ package connectGit;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.eclipse.jgit.api.AddCommand;
-import org.eclipse.jgit.api.CommitCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PushCommand;
-import org.eclipse.jgit.api.errors.CheckoutConflictException;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidRefNameException;
-import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
-import org.eclipse.jgit.api.errors.RefNotFoundException;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import java.util.HashMap;
+
+import java.util.Properties;
+import java.util.Scanner;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.google.gson.Gson;
-
-import common.util;
-import jdk.nashorn.internal.parser.JSONParser;
-
 
 public class GitService {
-	
-	private static final Gson gson = new Gson();
-	util util = new util();
-	Properties prop = util.readProperties("config/local.properties");
-	
-	
-	public static final String localPath = "C:\\Users\\soobin\\Desktop\\test_repo";
-	public static final String username = "tnqls7742";
-	String password = prop.getProperty("password");
-	
-	public void callGitService() throws IOException, GitAPIException {
-		
-		Git git = Git.open(new File(localPath));
-		System.out.println(git.toString());
-		
-		AddCommand add = git.add();
-		add.addFilepattern("first_file");
-		add.call();
-		System.out.println("add call");
-		
-		CommitCommand commit = git.commit();
-		commit.setMessage("java commit");
-		commit.call();
-		System.out.println("commit call");
-		
-		PushCommand push = git.push();
-		push.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));		
-		push.call();
-		System.out.println("push call");
-	}
 
+	Scanner scan = new Scanner(System.in);
+	PropertyService propService = new PropertyService();
+
+	Properties props = propService.getProperties();
 	
-	public void apiTestGet() throws Exception 
+	String branch = props.getProperty("branch");
+	String username = props.getProperty("username");
+	String password = props.getProperty("password");
+	;
+	
+	
+	//1. 조직 리포지토리 목록 구하기
+	public JSONArray getOrgRepository() throws Exception 
 	{
+		String apiUrl = "https://api.github.com/orgs/bsJavaOrg/repos";
+		String restType = "GET";
 		
-		System.out.println(password);
-	    URL url = null;
-	    String readLine = null;
-	    StringBuilder buffer = null;
-	    BufferedReader bufferedReader = null;
-	    BufferedWriter bufferedWriter = null;
-	    HttpURLConnection urlConnection = null;
-	    	
-	    int connTimeout = 5000;
-	    int readTimeout = 3000;
-			
-//	    String apiUrl = "https://jsonplaceholder.typicode.com/todos/1";	// 각자 상황에 맞는 IP & url 사용 		
-	    String apiUrl = "https://api.github.com/repos/soobin10236/test_repo/commits/16c3c95bb2848e6281ba54680c6e38283d785f90/pulls";	// 각자 상황에 맞는 IP & url 사용 		
-			
-	    try 
-	    {
-	        url = new URL(apiUrl);
-	        urlConnection = (HttpURLConnection)url.openConnection();
-	        urlConnection.setRequestMethod("GET");
-	        urlConnection.setConnectTimeout(connTimeout);
-	        urlConnection.setReadTimeout(readTimeout);
-	        urlConnection.setRequestProperty("Accept", "application/json;");
-				
-	        buffer = new StringBuilder();
-	        if(urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) 
-	        {
-	            bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(),"UTF-8"));
-	            while((readLine = bufferedReader.readLine()) != null) 
-	    	    {
-	                buffer.append(readLine).append("\n");
-	            }
-	        }
-	        else 
-	        {
-	            buffer.append("code : ");
-	            buffer.append(urlConnection.getResponseCode()).append("\n");
-	            buffer.append("message : ");
-	            buffer.append(urlConnection.getResponseMessage()).append("\n");
-	        }
-	    }
-	    catch(Exception ex) 
-	    {
-	        ex.printStackTrace();
-	    }
-	    finally 
-	    {
-	        try 
-	        {
-	            if (bufferedWriter != null) { bufferedWriter.close(); }
-	            if (bufferedReader != null) { bufferedReader.close(); }
-	        }
-	        catch(Exception ex) 
-	        { 
-	            ex.printStackTrace();
-	        }
-	    }
-			
-			
-	        System.out.println("결과 : " + buffer.toString());
-	        System.out.println(gson.toJson(buffer.toString()));
-//	        System.out.println(gson.fromJson(gson.toJson(buffer.toString()),String.class));
-	        
-//	        JSONObject jsonObj = new JSONObject(buffer.toString());
-	        JSONArray jsonArr = new JSONArray(buffer.toString());
-	        
-	        for(int i = 0; i < jsonArr.length(); i++) {
-	        	JSONObject jsonObj = (JSONObject) jsonArr.get(i);
-	        	
-	        	System.out.println("===========================================");
-	 	        System.out.println("repository : " + new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
-	 	        System.out.println("title : " + jsonObj.optString("title"));
-	 	        System.out.println("===========================================");
-	        }
-//	        JSONObject jsonObj = (JSONObject) jsonArr.get(0);
-//	        
-////	        System.out.println(jsonObj.get("head"));
-////	        System.out.println(new JSONObject(jsonObj.optString("head")).get("repo"));
-////	        System.out.println(new JSONObject(jsonObj.optString("head")).get("ref"));
-//	        System.out.println("===========================================");
-//	        System.out.println("repository : " + new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
-//	        System.out.println("title : " + jsonObj.optString("title"));
-//	        System.out.println("===========================================");
-	        
-	    }
+		StringBuilder buffer = callRestApi(apiUrl, restType);
+		
+//		System.out.println("결과 : " + buffer.toString());
+		JSONArray jsonArr = new JSONArray(buffer.toString());
+
+		return jsonArr;
+	}
 	
+	//2. 조직 리포지토리 별 풀리퀘스트 목록 가져오기(브랜치)
 	public HashMap<String, String> getPullRequestList(String repoAddr) throws Exception 
 	{
+		String apiUrl = "https://api.github.com/repos/" + repoAddr + "/pulls";	// 각자 상황에 맞는 IP & url 사용 	
+		String restType = "GET";
 		
-		URL url = null;
-		String readLine = null;
-		StringBuilder buffer = null;
-		BufferedReader bufferedReader = null;
-		BufferedWriter bufferedWriter = null;
-		HttpURLConnection urlConnection = null;
-		
-		int connTimeout = 5000;
-		int readTimeout = 3000;
-			
-		String apiUrl = "https://api.github.com/repos/" + repoAddr + "/pulls";	// 각자 상황에 맞는 IP & url 사용 		
-		
-		try 
-		{
-			url = new URL(apiUrl);
-			urlConnection = (HttpURLConnection)url.openConnection();
-			urlConnection.setRequestMethod("GET");
-			urlConnection.setConnectTimeout(connTimeout);
-			urlConnection.setReadTimeout(readTimeout);
-			urlConnection.setRequestProperty("Accept", "application/json;");
-			urlConnection.setRequestProperty("Authorization", "token " + password);
-			
-			buffer = new StringBuilder();
-			if(urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) 
-			{
-				bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(),"UTF-8"));
-				while((readLine = bufferedReader.readLine()) != null) 
-				{
-					buffer.append(readLine).append("\n");
-				}
-			}
-			else 
-			{
-				buffer.append("code : ");
-				buffer.append(urlConnection.getResponseCode()).append("\n");
-				buffer.append("message : ");
-				buffer.append(urlConnection.getResponseMessage()).append("\n");
-			}
-		}
-		catch(Exception ex) 
-		{
-			ex.printStackTrace();
-		}
-		finally 
-		{
-			try 
-			{
-				if (bufferedWriter != null) { bufferedWriter.close(); }
-				if (bufferedReader != null) { bufferedReader.close(); }
-			}
-			catch(Exception ex) 
-			{ 
-				ex.printStackTrace();
-			}
-		}
-		
-		
-//		System.out.println("getPullRequestList결과 : " + buffer.toString());
-		String branch = "dev-tnqls7742";
+		StringBuilder buffer = callRestApi(apiUrl, restType);
 
 		JSONArray jsonArr = new JSONArray(buffer.toString());
 		
-		HashMap<String, String> map = new HashMap<String, String>();
-		
-		for(int i = 0; i < jsonArr.length(); i++) {
-			JSONObject jsonObj = (JSONObject) jsonArr.get(i);
-			
-			String branchTitle = new JSONObject(jsonObj.optString("head")).optString("ref");
-			
-			
-			System.out.println("");
-			if(branchTitle.equals(branch)) {
-				System.out.println("=================getPullRequestList==========================");
-				System.out.println("repository : " + new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
-				System.out.println("branch : " + new JSONObject(jsonObj.optString("head")).optString("ref"));
-				System.out.println("title : " + jsonObj.optString("title"));
-				System.out.println("url : " + jsonObj.optString("url"));
-				map.put("repository", new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
-				map.put("branch", new JSONObject(jsonObj.optString("head")).optString("ref"));
-				map.put("title", jsonObj.optString("title"));
-				map.put("url", jsonObj.optString("url"));
-				
-			} else {
-				continue;
-//				System.out.println("=================wrongList==========================");
-			}
-			
-//			System.out.println("===========================================");
-		}
-		
-//		for(Object pr : arr) {
-//			System.out.println(pr.toString());
-//		}
+		HashMap<String, String> map = getPullRequest(jsonArr);
 		
 		return map;
 	}
 	
-	public void apiTestPut(String prUrl) throws Exception 
+	public void mergeRequest(String prUrl) throws Exception 
 	{
-		
-		System.out.println(password);
-	    URL url = null;
-	    String readLine = null;
-	    StringBuilder buffer = null;
-	    BufferedReader bufferedReader = null;
-	    BufferedWriter bufferedWriter = null;
-	    HttpURLConnection urlConnection = null;
-	    	
-	    int connTimeout = 5000;
-	    int readTimeout = 3000;
-			
-//	    String apiUrl = "https://jsonplaceholder.typicode.com/todos/1";	// 각자 상황에 맞는 IP & url 사용 		
-	    String apiUrl = prUrl + "/merge";	// 각자 상황에 맞는 IP & url 사용 		
-			
-	    try 
-	    {
-	        url = new URL(apiUrl);
-	        urlConnection = (HttpURLConnection)url.openConnection();
-	        urlConnection.setRequestMethod("PUT");
-	        urlConnection.setConnectTimeout(connTimeout);
-	        urlConnection.setReadTimeout(readTimeout);
-	        urlConnection.setRequestProperty("Accept", "application/json;");
-			urlConnection.setRequestProperty("Authorization", "token " + password);
-				
-	        buffer = new StringBuilder();
-	        if(urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) 
-	        {
-	            bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(),"UTF-8"));
-	            while((readLine = bufferedReader.readLine()) != null) 
-	    	    {
-	                buffer.append(readLine).append("\n");
-	            }
-	        }
-	        else 
-	        {
-	            buffer.append("code : ");
-	            buffer.append(urlConnection.getResponseCode()).append("\n");
-	            buffer.append("message : ");
-	            buffer.append(urlConnection.getResponseMessage()).append("\n");
-	        }
-	    }
-	    catch(Exception ex) 
-	    {
-	        ex.printStackTrace();
-	    }
-	    finally 
-	    {
-	        try 
-	        {
-	            if (bufferedWriter != null) { bufferedWriter.close(); }
-	            if (bufferedReader != null) { bufferedReader.close(); }
-	            if (urlConnection != null) { urlConnection.disconnect(); }
-	        }
-	        catch(Exception ex) 
-	        { 
-	            ex.printStackTrace();
-	        }
-	    }
+
+	    String apiUrl = prUrl + "/merge";	// 각자 상황에 맞는 IP & url 사용 	
+	    String restType = "PUT";
+	    callRestApi(apiUrl, restType);
 	    
-	    System.out.println(buffer.toString());
+//	    System.out.println(buffer.toString());
 	        
 	}
 	
+	private HashMap<String, String> getPullRequest(JSONArray jsonArr) {
+		HashMap<String, String> map = new HashMap<String, String>();
+		
+		try {
+			
+			for(int i = 0; i < jsonArr.length(); i++) {
+				JSONObject jsonObj = (JSONObject) jsonArr.get(i);
+				
+				String branchTitle = new JSONObject(jsonObj.optString("head")).optString("ref");
+				
+				if(branchTitle.equals(branch)) {
+					System.out.println("");
+					System.out.println("================= 풀리퀘스트 ==========================");
+					System.out.println("리포지토리 : " + new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
+					System.out.println("브랜치 : " + new JSONObject(jsonObj.optString("head")).optString("ref"));
+					System.out.println("메시지 : " + jsonObj.optString("title"));
+					map.put("repository", new JSONObject(new JSONObject(jsonObj.optString("head")).optString("repo")).optString("full_name"));
+					map.put("branch", new JSONObject(jsonObj.optString("head")).optString("ref"));
+					map.put("title", jsonObj.optString("title"));
+					map.put("url", jsonObj.optString("url"));
+					
+				} else {
+					continue;
+				}
+				
+			}
+			
+			if(!map.isEmpty()) {
+				System.out.println("");
+				System.out.println("머지를 원하시면 1을 입력하세요. 이외에는 종료됩니다.");
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return map;
+	}
+	
+	
+	private StringBuilder callRestApi(String apiUrl, String restType) {
+
+		StringBuilder buffer = null;
+		try {
+			String readLine = null;
+			BufferedReader bufferedReader = null;
+			BufferedWriter bufferedWriter = null;
+			HttpURLConnection urlConnection = null;
+				
+			try 
+			{
+				urlConnection = connectUrlConnection(new URL(apiUrl), restType, password);
+				
+				buffer = new StringBuilder();
+				if(urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) 
+				{
+					bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(),"UTF-8"));
+					while((readLine = bufferedReader.readLine()) != null) 
+					{
+						buffer.append(readLine).append("\n");
+					}
+				}
+				else 
+				{
+					buffer.append("code : ");
+					buffer.append(urlConnection.getResponseCode()).append("\n");
+					buffer.append("message : ");
+					buffer.append(urlConnection.getResponseMessage()).append("\n");
+				}
+			}
+			catch(Exception ex) 
+			{
+				ex.printStackTrace();
+			}
+			finally 
+			{
+				try 
+				{
+					if (bufferedWriter != null) { bufferedWriter.close(); }
+					if (bufferedReader != null) { bufferedReader.close(); }
+				}
+				catch(Exception ex) 
+				{ 
+					ex.printStackTrace();
+				}
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return buffer;
+	}
+	
+	private HttpURLConnection connectUrlConnection(URL url, String type, String password) throws IOException {
+		
+		int connTimeout = 5000;
+	    int readTimeout = 3000;
+		
+		HttpURLConnection urlConnection = (HttpURLConnection)url.openConnection(); 
+		
+		urlConnection.setRequestMethod(type);
+        urlConnection.setConnectTimeout(connTimeout);
+        urlConnection.setReadTimeout(readTimeout);
+        urlConnection.setRequestProperty("Accept", "application/json;");
+		urlConnection.setRequestProperty("Authorization", "token " + password);
+		
+		return urlConnection;
+	}
+
+	
+ 
+	
+	
+	
+	///////////////////////////////////////////////////////////////////////////////////////////////
+	@Deprecated
 	public void apiTestPost() throws Exception 
 	{
 		
@@ -342,7 +201,6 @@ public class GitService {
 		int connTimeout = 5000;
 		int readTimeout = 3000;
 		
-//	    String apiUrl = "https://jsonplaceholder.typicode.com/todos/1";	// 각자 상황에 맞는 IP & url 사용 		
 		String apiUrl = "https://api.github.com/repos/soobin10236/test_repo/pulls";	// 각자 상황에 맞는 IP & url 사용 		
 		
 		try 
@@ -359,7 +217,6 @@ public class GitService {
 			
 			String ParamData = "";
 			ParamData =  "{ \"title\" : \"commit java!!!\", \"head\" : \"dev-tnqls7742\", \"base\" : \"master\" }";
-//			ParamData = "title=commit java!!!&head=dev-tnqls7742&base=master";
 			try (OutputStream os = urlConnection.getOutputStream()){
 				byte request_data[] = ParamData.getBytes("utf-8");
 				os.write(request_data);
@@ -415,78 +272,6 @@ public class GitService {
 		
 	}
 
-	
-	/////////////////////////////////////////////////
-	public JSONArray getOrgRepository() throws Exception 
-	{
-		
-		URL url = null;
-		String readLine = null;
-		StringBuilder buffer = null;
-		BufferedReader bufferedReader = null;
-		BufferedWriter bufferedWriter = null;
-		HttpURLConnection urlConnection = null;
-		
-		int connTimeout = 5000;
-		int readTimeout = 3000;
-			
-		String apiUrl = "https://api.github.com/orgs/bsJavaOrg/repos";	// 각자 상황에 맞는 IP & url 사용 		
-		
-		try 
-		{
-			url = new URL(apiUrl);
-			urlConnection = (HttpURLConnection)url.openConnection();
-			urlConnection.setRequestMethod("GET");
-			urlConnection.setConnectTimeout(connTimeout);
-			urlConnection.setReadTimeout(readTimeout);
-			urlConnection.setRequestProperty("Accept", "application/json;");
-			urlConnection.setRequestProperty("Authorization", "token " + password);
-			
-			buffer = new StringBuilder();
-			if(urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) 
-			{
-				bufferedReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(),"UTF-8"));
-				while((readLine = bufferedReader.readLine()) != null) 
-				{
-					buffer.append(readLine).append("\n");
-				}
-			}
-			else 
-			{
-				buffer.append("code : ");
-				buffer.append(urlConnection.getResponseCode()).append("\n");
-				buffer.append("message : ");
-				buffer.append(urlConnection.getResponseMessage()).append("\n");
-			}
-		}
-		catch(Exception ex) 
-		{
-			ex.printStackTrace();
-		}
-		finally 
-		{
-			try 
-			{
-				if (bufferedWriter != null) { bufferedWriter.close(); }
-				if (bufferedReader != null) { bufferedReader.close(); }
-			}
-			catch(Exception ex) 
-			{ 
-				ex.printStackTrace();
-			}
-		}
-		
-		
-		System.out.println("결과 : " + buffer.toString());
-		JSONArray jsonArr = new JSONArray(buffer.toString());
-		
-		System.out.println(jsonArr);
-
-		return jsonArr;
-	}
-	
-	
-	
 	
 }
 

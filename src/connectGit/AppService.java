@@ -1,69 +1,73 @@
 package connectGit;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
 
-import org.eclipse.jgit.api.AddCommand;
-import org.eclipse.jgit.api.CommitCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PushCommand;
-import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.internal.storage.file.FileRepository;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+import java.util.Scanner;
 
 
 public class AppService {
 	
 	public static void main(String[] args) throws Exception {
 		
-		System.out.println("started");
-		
-		GitService gitService = new GitService();
-		
-//		gitService.callGitService();
-		
-//		gitService.apiTestGet();
-//		gitService.apiTestPost();
-//		gitService.apiTestPut();
-		
-		JSONArray repoList = gitService.getOrgRepository();
-		
-		ArrayList<HashMap<String, String>> arr = new ArrayList<>();
+	System.out.println("started");
 
-		for(int i = 0; i < repoList.length(); i++) {
-			JSONObject repoObj = (JSONObject) repoList.get(i);
-			
-			arr.add(gitService.getPullRequestList(repoObj.optString("full_name")));
-//			gitService.apiTestPut(jsonObj.optString("number"));
+	Scanner scan = new Scanner(System.in);
+	
+	//GitService 생성
+	GitService gitService = new GitService();
+	
+	//조직 repository list 생성
+	JSONArray repoList = gitService.getOrgRepository();
+	
+	//pullrequest 목록 담을 arrayList
+	ArrayList<HashMap<String, String>> arr = new ArrayList<>();
+	
+	
+	for(int i = 0; i < repoList.length(); i++) {
+		//각 repository 객체 생성
+		JSONObject repoObj = (JSONObject) repoList.get(i);
+//		System.out.println(repoObj.toString());
+		
+//		System.out.println("getPullRequest Call");
+		//해당 repository에 pullRequest있는지 검사
+		HashMap<String, String> repoMap = gitService.getPullRequestList(repoObj.optString("full_name"));
+		
+		//pullRequest 목록 존재 할 때 arrayList에 저장
+		if(!repoMap.isEmpty()) {
+			arr.add(repoMap);
+		}
+	}
+	
+	if(arr.size() > 0) {
+		if(scan.nextInt() == 1) {
+			System.out.println("");
+			System.out.println("merge started...");
+			for(HashMap<String, String> pr : arr) {
+
+				gitService.mergeRequest(pr.get("url"));
+			}
+			System.out.println("merge finished...");
+		} else {
+			System.exit(0);
 		}
 		
+		
+	} else {
 		System.out.println("");
-		System.out.println("======================PullRequestList================================");
-		for(HashMap<String, String> pr : arr) {
-			System.out.println(pr.toString());
-//			System.out.println(pr.get("url"));
-			gitService.apiTestPut(pr.get("url"));
-		}
-
-		
+		System.out.println("======================풀리퀘스트 목록이 존재하지 않습니다.================================");
+	}
+	
 			
 		
 		System.out.println("finished");
+		System.out.println("종료를 원하시면 아무 키나 입력하세요.");
+		scan.hasNext();
+		System.exit(0);
 		
 	}
 
