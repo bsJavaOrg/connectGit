@@ -2,10 +2,8 @@ package connectGit;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.HashMap;
 import java.util.Properties;
 
-import common.util;
 
 public class PropertyService {
 
@@ -16,7 +14,7 @@ public class PropertyService {
 		try {
 			//jar 위치 -> properties 경로
 			String filePath = ClassLoader.getSystemClassLoader().getResource(".").getPath() + "local.properties";
-//			System.out.println(filePath);
+			System.out.println(filePath);
 			//파일 생성
 			File file = new File(filePath);
 			

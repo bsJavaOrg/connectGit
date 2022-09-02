@@ -31,9 +31,7 @@ public class AppService {
 	for(int i = 0; i < repoList.length(); i++) {
 		//각 repository 객체 생성
 		JSONObject repoObj = (JSONObject) repoList.get(i);
-//		System.out.println(repoObj.toString());
 		
-//		System.out.println("getPullRequest Call");
 		//해당 repository에 pullRequest있는지 검사
 		HashMap<String, String> repoMap = gitService.getPullRequestList(repoObj.optString("full_name"));
 		
@@ -43,7 +41,12 @@ public class AppService {
 		}
 	}
 	
+//	arr.clear();
+	
 	if(arr.size() > 0) {
+		System.out.println("");
+		System.out.println("머지를 원하시면 1을 입력하세요. 이외에는 종료됩니다.");
+		
 		if(scan.nextInt() == 1) {
 			System.out.println("");
 			System.out.println("merge started...");
