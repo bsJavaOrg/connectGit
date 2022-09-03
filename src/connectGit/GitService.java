@@ -18,17 +18,21 @@ import java.util.Scanner;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import util.util;
+
 
 public class GitService {
 
 	Scanner scan = new Scanner(System.in);
-	PropertyService propService = new PropertyService();
+	util util = new util();
 
-	Properties props = propService.getProperties();
+	Properties localProps = util.readLocalProperties();
+	Properties branchProps = util.readBranchProperties();
 	
-	String branch = props.getProperty("branch");
-	String username = props.getProperty("username");
-	String password = props.getProperty("password");
+	String username = localProps.getProperty("username");
+	String password = localProps.getProperty("password");
+	
+	String branch = branchProps.getProperty("branch");
 	;
 	
 	
