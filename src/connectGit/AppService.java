@@ -14,7 +14,6 @@ public class AppService {
 	
 	public static void main(String[] args) throws Exception {
 		
-	System.out.println("ignore test");
 	System.out.println("started");
 
 	Scanner scan = new Scanner(System.in);
